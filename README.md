@@ -11,6 +11,11 @@ go run main.go \
 -v=2
 ```
 
+```
+kubectl apply -f example/topic-a.yaml
+kubectl apply -f example/topic-b.yaml
+```
+
 ## Links
 
 https://github.com/kubernetes/sample-controller
