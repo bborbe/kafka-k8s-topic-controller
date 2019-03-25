@@ -7,9 +7,14 @@ This Kubernetes controller listen for a custom resource definition and create co
 ```bash
 go run main.go \
 -kubeconfig=$HOME/.kube/config \
+-kafka-brokers=kafka:9092 \
 -v=2
 ```
 
 ## Links
+
+https://github.com/kubernetes/sample-controller
+
+https://github.com/openshift-evangelists/crd-code-generation
 
 https://blog.openshift.com/kubernetes-deep-dive-code-generation-customresources/

@@ -3,10 +3,10 @@ module github.com/bborbe/kafka-k8s-topic-controller
 go 1.12
 
 require (
+	github.com/Shopify/sarama v1.21.0
 	github.com/bborbe/argument v0.0.0-20190308143650-ae14ae657ae5
 	github.com/bborbe/assert v0.0.0-20181116222016-22a6c6341415 // indirect
 	github.com/bborbe/flagenv v0.0.0-20181019084341-2956c4545608
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.1.0+incompatible // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
@@ -32,6 +32,7 @@ require (
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/api v0.0.0-20190222213804-5cb15d344471 // indirect
+	k8s.io/apiextensions-apiserver v0.0.0-20190322231200-1c09d17c1352
 	k8s.io/apimachinery v0.0.0-20190221213512-86fb29eff628
 	k8s.io/client-go v10.0.0+incompatible
 	k8s.io/klog v0.2.0 // indirect

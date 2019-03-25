@@ -1,0 +1,10 @@
+apiVersion: kafka.benjamin-borbe.de/v1
+kind: Topic
+metadata:
+  name: topic-b
+spec:
+  name: topic-b
+  partitions: 1
+  replicas: 1
+connector:
+  go:27:

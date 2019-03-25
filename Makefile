@@ -7,7 +7,6 @@ deps:
 	go get -u github.com/maxbrunsfeld/counterfeiter
 	go get -u github.com/onsi/ginkgo/ginkgo
 	go get -u golang.org/x/tools/cmd/goimports
-	go get -u github.com/actgardner/gogen-avro/gogen-avro
 
 precommit: ensure generate test check addlicense
 	@echo "ready to commit"
@@ -18,14 +17,14 @@ ensure:
 
 generate:
 	go get github.com/maxbrunsfeld/counterfeiter
-	go get github.com/actgardner/gogen-avro/gogen-avro
-	rm -rf mocks avro
+	rm -rf mocks
 	go generate ./...
 
+	rm -rf k8s/client
 	go get -d k8s.io/code-generator/...
 	${GOPATH}/src/k8s.io/code-generator/generate-groups.sh all \
-	github.com/bborbe/kafka-k8s-topic-controller/client github.com/bborbe/kafka-k8s-topic-controller/apis \
-	example.com:v1
+	github.com/bborbe/kafka-k8s-topic-controller/k8s/client github.com/bborbe/kafka-k8s-topic-controller/k8s/apis \
+	kafka.benjamin-borbe.de:v1
 
 test:
 	go test -cover -race $(shell go list ./... | grep -v /vendor/)

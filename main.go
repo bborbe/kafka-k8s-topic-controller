@@ -9,18 +9,16 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
-	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/bborbe/argument"
 	flag "github.com/bborbe/flagenv"
-	"github.com/bborbe/kafka-k8s-topic-controller/client/clientset/versioned"
-	"github.com/bborbe/kafka-k8s-topic-controller/client/informers/externalversions"
+	"github.com/bborbe/kafka-k8s-topic-controller/k8s"
+	"github.com/bborbe/kafka-k8s-topic-controller/kafka"
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 func main() {
@@ -59,39 +57,25 @@ func contextWithSig(ctx context.Context) context.Context {
 }
 
 type application struct {
-	Kubeconfig string `required:"true" arg:"kubeconfig" env:"KUBECONFIG"`
+	Kubeconfig   string `required:"true" arg:"kubeconfig" env:"KUBECONFIG" usage:"Path to k8s config"`
+	KafkaBrokers string `required:"true" arg:"kafka-brokers" env:"KAFKA_BROKERS" usage:"Comma seperated list of Kafka brokers"`
 }
 
 func (a *application) run(ctx context.Context) error {
-	clientset, err := a.createKubernetesClientset()
+	config := sarama.NewConfig()
+	config.Version = sarama.V2_0_0_0
+	clusterAdmin, err := sarama.NewClusterAdmin(strings.Split(a.KafkaBrokers, ","), config)
 	if err != nil {
+		return errors.Wrap(err, "create cluster admin failed")
+	}
+	k8sConnector := k8s.NewConnector(
+		a.Kubeconfig,
+		k8s.NewResourceEventHandler(
+			kafka.NewConnector(clusterAdmin),
+		),
+	)
+	if err := k8sConnector.SetupCustomResourceDefinition(); err != nil {
 		return err
 	}
-	informerFactory := externalversions.NewSharedInformerFactory(clientset, 30*time.Second)
-	informerFactory.Example().V1().Databases().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{})
-	select {
-	case <-ctx.Done():
-		return nil
-	}
-}
-
-func (a *application) createKubernetesClientset() (versioned.Interface, error) {
-	config, err := a.createKubernetesConfig()
-	if err != nil {
-		return nil, errors.Wrap(err, "build k8s config failed")
-	}
-	clientset, err := versioned.NewForConfig(config)
-	if err != nil {
-		return nil, errors.Wrap(err, "build clientset failed")
-	}
-	return clientset, nil
-}
-
-func (a *application) createKubernetesConfig() (*rest.Config, error) {
-	if len(a.Kubeconfig) > 0 {
-		glog.V(2).Infof("create kube config from flags")
-		return clientcmd.BuildConfigFromFlags("", a.Kubeconfig)
-	}
-	glog.V(2).Infof("create in cluster kube config")
-	return rest.InClusterConfig()
+	return k8sConnector.Listen(ctx)
 }
