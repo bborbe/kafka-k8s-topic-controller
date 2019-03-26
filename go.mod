@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/Shopify/sarama v1.21.0
-	github.com/bborbe/argument v0.0.0-20190308143650-ae14ae657ae5
+	github.com/bborbe/argument v1.0.0
 	github.com/bborbe/assert v0.0.0-20181116222016-22a6c6341415 // indirect
 	github.com/bborbe/flagenv v0.0.0-20181019084341-2956c4545608
 	github.com/bborbe/run v0.0.0-20190302200729-1b9e887f6bbe

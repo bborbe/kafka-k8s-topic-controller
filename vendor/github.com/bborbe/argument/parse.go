@@ -18,7 +18,11 @@ func Parse(data interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := Fill(data, mergeValues(argsValues, envValues)); err != nil {
+	defaultValues, err := DefaultValues(data)
+	if err != nil {
+		return err
+	}
+	if err := Fill(data, mergeValues(defaultValues, argsValues, envValues)); err != nil {
 		return err
 	}
 	if err := Print(data); err != nil {

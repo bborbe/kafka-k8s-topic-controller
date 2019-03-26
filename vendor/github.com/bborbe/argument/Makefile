@@ -12,6 +12,7 @@ precommit: ensure format test check addlicense
 
 ensure:
 	GO111MODULE=on go mod tidy
+	GO111MODULE=on go mod vendor
 
 format:
 	@go get golang.org/x/tools/cmd/goimports

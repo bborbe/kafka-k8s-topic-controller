@@ -12,36 +12,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ParseEnv into the given struct.
-func ParseEnv(data interface{}, environ []string) error {
-	values, err := envToValues(data, environ)
-	if err != nil {
-		return err
-	}
-	return Fill(data, values)
-}
-
-func envToValues(data interface{}, environ []string) (map[string]interface{}, error) {
+// DefaultValues returns all default values of the given struct.
+func DefaultValues(data interface{}) (map[string]interface{}, error) {
 	var err error
-	envValues := make(map[string]string)
-	for _, env := range environ {
-		for i := 0; i < len(env); i++ {
-			if env[i] == '=' {
-				envValues[env[:i]] = env[i+1:]
-			}
-		}
-	}
-	values := make(map[string]interface{})
 	e := reflect.ValueOf(data).Elem()
 	t := e.Type()
+	values := make(map[string]interface{})
 	for i := 0; i < e.NumField(); i++ {
 		tf := t.Field(i)
 		ef := e.Field(i)
-		argName, ok := tf.Tag.Lookup("env")
-		if !ok {
-			continue
-		}
-		value, ok := envValues[argName]
+		value, ok := tf.Tag.Lookup("default")
 		if !ok {
 			continue
 		}

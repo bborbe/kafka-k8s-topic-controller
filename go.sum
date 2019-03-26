@@ -5,8 +5,8 @@ github.com/Shopify/sarama v1.21.0 h1:0GKs+e8mn1RRUzfg9oUXv3v7ZieQLmOZF/bfnmmGhM8
 github.com/Shopify/sarama v1.21.0/go.mod h1:yuqtN/pe8cXRWG5zPaO7hCfNJp5MwmkoJEoLjkm5tCQ=
 github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWsokNbMijUGhmcoBJc=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
-github.com/bborbe/argument v0.0.0-20190308143650-ae14ae657ae5 h1:h01jdNd0GE703Lj22GSmKUzPPVGyordY1zTdU1CiBIg=
-github.com/bborbe/argument v0.0.0-20190308143650-ae14ae657ae5/go.mod h1:bIlXQLVNTerrpjNbwrr2skW/9xovRLtgRbKr9+jytgc=
+github.com/bborbe/argument v1.0.0 h1:+RhL8OwsdENaHPQMUgWe+xhwcAIPD+NDpb85kkle6e8=
+github.com/bborbe/argument v1.0.0/go.mod h1:KPaTNRsOSHdwdx8fGi88NsZsfDuY0rccDTcAzgbwzjs=
 github.com/bborbe/assert v0.0.0-20181116222016-22a6c6341415 h1:/JFZMMM/HYFeb44D+MSlYTFVI2a9zz2UPK0h9scycxA=
 github.com/bborbe/assert v0.0.0-20181116222016-22a6c6341415/go.mod h1:kASVnwjQZw9E9ne6ofCNXmKseNDlW14YPA+opAL9v18=
 github.com/bborbe/flagenv v0.0.0-20181019084341-2956c4545608 h1:WD5LwN4yz5bQpYIT0KAebOIUPUMz9ZP4vBiadsKOLFE=
@@ -125,6 +125,8 @@ gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 h1:uRGJdciOHaEIrze2W8Q3AKkep
 gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7/go.mod h1:dt/ZhP58zS4L8KSrWDmTeBkI65Dw0HsyUHuEVlX15mw=
 gopkg.in/yaml.v2 v2.2.1 h1:mUhvW9EsL+naU5Q3cakzfE91YhliOondGd6ZrsDBHQE=
 gopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
+gopkg.in/yaml.v2 v2.2.2 h1:ZCJp+EgiOT7lHqUV2J862kp8Qj64Jo6az82+3Td9dZw=
+gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 k8s.io/api v0.0.0-20190222213804-5cb15d344471 h1:MzQGt8qWQCR+39kbYRd0uQqsvSidpYqJLFeWiJ9l4OE=
 k8s.io/api v0.0.0-20190222213804-5cb15d344471/go.mod h1:iuAfoD4hCxJ8Onx9kaTIt30j7jUFS00AXQi6QMi99vA=
 k8s.io/apiextensions-apiserver v0.0.0-20190322231200-1c09d17c1352 h1:zukcRaXWkBtPh9YLgveTpIvNYzZ+DgAmpQAOxzIKB5c=

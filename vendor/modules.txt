@@ -2,7 +2,7 @@
 github.com/DataDog/zstd
 # github.com/Shopify/sarama v1.21.0
 github.com/Shopify/sarama
-# github.com/bborbe/argument v0.0.0-20190308143650-ae14ae657ae5
+# github.com/bborbe/argument v1.0.0
 github.com/bborbe/argument
 # github.com/bborbe/flagenv v0.0.0-20181019084341-2956c4545608
 github.com/bborbe/flagenv
@@ -175,7 +175,7 @@ gopkg.in/fsnotify.v1
 gopkg.in/inf.v0
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
-# gopkg.in/yaml.v2 v2.2.1
+# gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
 # k8s.io/api v0.0.0-20190222213804-5cb15d344471
 k8s.io/api/admissionregistration/v1alpha1

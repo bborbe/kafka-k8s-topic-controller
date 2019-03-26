@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var TopicNotFoundError = errors.New("topic not found")
+
 //go:generate counterfeiter -o ../mocks/kafka-clusteradmin.go --fake-name KafkaClusterAdmin . ClusterAdmin
 type ClusterAdmin interface {
 	ListTopics() (map[string]sarama.TopicDetail, error)
@@ -52,37 +54,73 @@ func (c *connector) Topics() ([]topic.Topic, error) {
 	return result, nil
 }
 
+func (c *connector) Topic(topicName string) (*topic.Topic, error) {
+	topicDetails, err := c.clusterAdmin.ListTopics()
+	if err != nil {
+		return nil, errors.Wrap(err, "list kafka topics failed")
+	}
+	for name, data := range topicDetails {
+		if name == topicName {
+			glog.V(3).Infof("found topic %s", topicName)
+			return &topic.Topic{
+				Name:              name,
+				NumPartitions:     data.NumPartitions,
+				ReplicationFactor: data.ReplicationFactor,
+			}, nil
+		}
+	}
+	return nil, TopicNotFoundError
+}
+
 func (c *connector) CreateTopic(topic topic.Topic) error {
-	glog.V(2).Infof("create topic %s", topic.Name)
+	oldTopic, err := c.Topic(topic.Name)
+	if err != nil {
+		if err == TopicNotFoundError {
+			glog.V(2).Infof("create topic %s", topic.Name)
+			err = c.clusterAdmin.CreateTopic(
+				topic.Name,
+				&sarama.TopicDetail{
+					NumPartitions:     topic.NumPartitions,
+					ReplicationFactor: topic.ReplicationFactor,
+					ReplicaAssignment: make(map[int32][]int32),
+					ConfigEntries:     make(map[string]*string),
+				},
+				false,
+			)
+			if err != nil {
+				return errors.Wrapf(err, "create topic %s failed", topic.Name)
+			}
+			glog.V(1).Infof("topic %s created", topic.Name)
+			return nil
+		}
+		return err
+	}
+	return c.UpdateTopic(*oldTopic, topic)
+}
+
+func (c *connector) UpdateTopic(oldTopic topic.Topic, newTopic topic.Topic) error {
+	if oldTopic.Equals(newTopic) {
+		glog.V(2).Infof("topic %s unchanged => skip", newTopic.Name)
+		return nil
+	}
+	glog.V(2).Infof("update topic %s", newTopic.Name)
+	if err := c.clusterAdmin.DeleteTopic(oldTopic.Name); err != nil {
+		return errors.Wrapf(err, "delete topic %s failed", oldTopic.Name)
+	}
 	err := c.clusterAdmin.CreateTopic(
-		topic.Name,
+		newTopic.Name,
 		&sarama.TopicDetail{
-			NumPartitions:     topic.NumPartitions,
-			ReplicationFactor: topic.ReplicationFactor,
+			NumPartitions:     newTopic.NumPartitions,
+			ReplicationFactor: newTopic.ReplicationFactor,
 			ReplicaAssignment: make(map[int32][]int32),
 			ConfigEntries:     make(map[string]*string),
 		},
 		false,
 	)
 	if err != nil {
-		return errors.Wrapf(err, "create topic %s failed", topic.Name)
+		return errors.Wrapf(err, "create topic %s failed", newTopic.Name)
 	}
-	glog.V(1).Infof("topic %s created", topic.Name)
-	return nil
-}
-
-func (c *connector) UpdateTopic(oldTopic topic.Topic, newTopic topic.Topic) error {
-	if oldTopic.Equals(newTopic) {
-		glog.V(2).Infof("topic unchanged => skip")
-		return nil
-	}
-	glog.V(2).Infof("update topic %s", newTopic.Name)
-	if err := c.DeleteTopic(oldTopic); err != nil {
-		glog.Warningf("delete topic failed: %v", err)
-	}
-	if err := c.CreateTopic(newTopic); err != nil {
-		glog.Warningf("create topic failed: %v", err)
-	}
+	glog.V(1).Infof("topic %s updated", newTopic.Name)
 	return nil
 }
 

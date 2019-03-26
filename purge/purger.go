@@ -34,6 +34,7 @@ type purger struct {
 }
 
 func (p *purger) Purge() error {
+	glog.V(2).Infof("purge not existing topics")
 	k8sTopics, err := p.k8sConnector.Topics()
 	if err != nil {
 		return errors.Wrap(err, "get topic from k8s failed")
@@ -60,5 +61,6 @@ func (p *purger) Purge() error {
 			}
 		}
 	}
+	glog.V(2).Infof("purge topics competed")
 	return nil
 }
