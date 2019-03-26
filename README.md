@@ -8,6 +8,8 @@ This Kubernetes controller listen for a custom resource definition and create co
 go run main.go \
 -kubeconfig=$HOME/.kube/config \
 -kafka-brokers=kafka:9092 \
+-purge=true \
+-purge-interval=15s \
 -v=2
 ```
 

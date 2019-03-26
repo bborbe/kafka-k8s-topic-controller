@@ -1,8 +1,14 @@
+// Copyright (c) 2019 Benjamin Borbe All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package k8s
 
 import (
 	"context"
 	"time"
+
+	"github.com/bborbe/kafka-k8s-topic-controller/topic"
 
 	"github.com/bborbe/kafka-k8s-topic-controller/k8s/client/clientset/versioned"
 	"github.com/bborbe/kafka-k8s-topic-controller/k8s/client/informers/externalversions"
@@ -11,7 +17,6 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsClient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
@@ -19,28 +24,27 @@ import (
 
 const defaultResync = 5 * time.Minute
 
+//go:generate counterfeiter -o ../mocks/k8s-connector.go --fake-name K8sConnector . Connector
 type Connector interface {
 	SetupCustomResourceDefinition() error
-	Listen(ctx context.Context) error
+	Listen(
+		ctx context.Context,
+		resourceEventHandler cache.ResourceEventHandler,
+	) error
+	Topics() ([]topic.Topic, error)
 }
 
-func NewConnector(
-	kubeconfig string,
-	resourceEventHandler cache.ResourceEventHandler,
-
-) Connector {
+func NewConnector(kubeconfig string) Connector {
 	return &connector{
-		kubeconfig:           kubeconfig,
-		resourceEventHandler: resourceEventHandler,
+		kubeconfig: kubeconfig,
 	}
 }
 
 type connector struct {
-	kubeconfig           string
-	resourceEventHandler cache.ResourceEventHandler
+	kubeconfig string
 }
 
-func (c *connector) List() ([]string, error) {
+func (c *connector) Topics() ([]topic.Topic, error) {
 	config, err := c.createKubernetesConfig()
 	if err != nil {
 		return nil, errors.Wrap(err, "build k8s config failed")
@@ -53,14 +57,17 @@ func (c *connector) List() ([]string, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "list topic failed")
 	}
-	var result []string
+	var result []topic.Topic
 	for _, item := range topicList.Items {
-		result = append(result, item.Spec.Name)
+		result = append(result, manifestToTopic(item))
 	}
 	return result, nil
 }
 
-func (c *connector) Listen(ctx context.Context) error {
+func (c *connector) Listen(
+	ctx context.Context,
+	resourceEventHandler cache.ResourceEventHandler,
+) error {
 	config, err := c.createKubernetesConfig()
 	if err != nil {
 		return errors.Wrap(err, "build k8s config failed")
@@ -75,7 +82,7 @@ func (c *connector) Listen(ctx context.Context) error {
 		V1().
 		Topics().
 		Informer().
-		AddEventHandler(c.resourceEventHandler)
+		AddEventHandler(resourceEventHandler)
 
 	stopCh := make(chan struct{})
 	glog.V(2).Infof("listen for events")
@@ -94,7 +101,7 @@ func (c *connector) SetupCustomResourceDefinition() error {
 	if err != nil {
 		return errors.Wrap(err, "build k8s config failed")
 	}
-	apiextensionsClient, err := apiextensionsClient.NewForConfig(config)
+	clientset, err := apiextensionsClient.NewForConfig(config)
 	if err != nil {
 		return errors.Wrap(err, "build clientset failed")
 	}
@@ -107,8 +114,7 @@ func (c *connector) SetupCustomResourceDefinition() error {
 			Plural:   "topics",
 			Singular: "topic",
 		},
-		Scope:   "Namespaced",
-		Version: "v1",
+		Scope: "Namespaced",
 		Versions: []v1beta1.CustomResourceDefinitionVersion{
 			{
 				Name:    "v1",
@@ -117,10 +123,10 @@ func (c *connector) SetupCustomResourceDefinition() error {
 			},
 		},
 	}
-	customResourceDefinition, err := apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(name, v1.GetOptions{})
+	customResourceDefinition, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Get(name, metav1.GetOptions{})
 	if err != nil {
 		glog.V(2).Infof("get CustomResourceDefinition %s failed => create", name)
-		_, err = apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(&v1beta1.CustomResourceDefinition{
+		_, err = clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(&v1beta1.CustomResourceDefinition{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "apiextensions.k8s.io/v1beta1",
 				Kind:       "CustomResourceDefinition",
@@ -137,7 +143,7 @@ func (c *connector) SetupCustomResourceDefinition() error {
 		return nil
 	}
 	customResourceDefinition.Spec = spec
-	_, err = apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Update(customResourceDefinition)
+	_, err = clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Update(customResourceDefinition)
 	if err != nil {
 		return errors.Wrap(err, "update CustomResourceDefinition failed")
 	}

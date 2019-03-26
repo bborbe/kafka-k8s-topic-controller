@@ -11,6 +11,10 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+	"time"
+
+	"github.com/bborbe/kafka-k8s-topic-controller/purge"
+	"github.com/bborbe/run"
 
 	"github.com/Shopify/sarama"
 	"github.com/bborbe/argument"
@@ -57,25 +61,50 @@ func contextWithSig(ctx context.Context) context.Context {
 }
 
 type application struct {
-	Kubeconfig   string `required:"true" arg:"kubeconfig" env:"KUBECONFIG" usage:"Path to k8s config"`
-	KafkaBrokers string `required:"true" arg:"kafka-brokers" env:"KAFKA_BROKERS" usage:"Comma seperated list of Kafka brokers"`
+	Kubeconfig    string        `required:"true" arg:"kubeconfig" env:"KUBECONFIG" usage:"Path to k8s config"`
+	KafkaBrokers  string        `required:"true" arg:"kafka-brokers" env:"KAFKA_BROKERS" usage:"Comma seperated list of Kafka brokers"`
+	Purge         bool          `required:"true" arg:"purge" env:"PURGE" usage:"Purge all not existing Topics"`
+	PurgeInterval time.Duration `required:"true" arg:"purge-interval" env:"PURGE_INTERVAL" usage:"Time between purges" default:"5m"`
 }
 
 func (a *application) run(ctx context.Context) error {
 	config := sarama.NewConfig()
 	config.Version = sarama.V2_0_0_0
+
 	clusterAdmin, err := sarama.NewClusterAdmin(strings.Split(a.KafkaBrokers, ","), config)
 	if err != nil {
 		return errors.Wrap(err, "create cluster admin failed")
 	}
-	k8sConnector := k8s.NewConnector(
-		a.Kubeconfig,
-		k8s.NewResourceEventHandler(
-			kafka.NewConnector(clusterAdmin),
-		),
-	)
+	defer clusterAdmin.Close()
+
+	k8sConnector := k8s.NewConnector(a.Kubeconfig)
 	if err := k8sConnector.SetupCustomResourceDefinition(); err != nil {
 		return err
 	}
-	return k8sConnector.Listen(ctx)
+	kafkaConnector := kafka.NewConnector(clusterAdmin)
+	purger := purge.NewPurger(k8sConnector, kafkaConnector)
+	return run.CancelOnFirstFinish(
+		ctx,
+		func(ctx context.Context) error {
+			return k8sConnector.Listen(
+				ctx,
+				k8s.NewResourceEventHandler(
+					kafkaConnector,
+				),
+			)
+		},
+		func(ctx context.Context) error {
+			for {
+				select {
+				case <-ctx.Done():
+					return nil
+				case <-time.NewTicker(a.PurgeInterval).C:
+					err := purger.Purge()
+					if err != nil {
+						return err
+					}
+				}
+			}
+		},
+	)
 }

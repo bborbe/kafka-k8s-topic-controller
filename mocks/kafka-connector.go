@@ -31,6 +31,18 @@ type KafkaConnector struct {
 	deleteTopicReturnsOnCall map[int]struct {
 		result1 error
 	}
+	TopicsStub        func() ([]topic.Topic, error)
+	topicsMutex       sync.RWMutex
+	topicsArgsForCall []struct {
+	}
+	topicsReturns struct {
+		result1 []topic.Topic
+		result2 error
+	}
+	topicsReturnsOnCall map[int]struct {
+		result1 []topic.Topic
+		result2 error
+	}
 	UpdateTopicStub        func(topic.Topic, topic.Topic) error
 	updateTopicMutex       sync.RWMutex
 	updateTopicArgsForCall []struct {
@@ -167,6 +179,61 @@ func (fake *KafkaConnector) DeleteTopicReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *KafkaConnector) Topics() ([]topic.Topic, error) {
+	fake.topicsMutex.Lock()
+	ret, specificReturn := fake.topicsReturnsOnCall[len(fake.topicsArgsForCall)]
+	fake.topicsArgsForCall = append(fake.topicsArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Topics", []interface{}{})
+	fake.topicsMutex.Unlock()
+	if fake.TopicsStub != nil {
+		return fake.TopicsStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.topicsReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *KafkaConnector) TopicsCallCount() int {
+	fake.topicsMutex.RLock()
+	defer fake.topicsMutex.RUnlock()
+	return len(fake.topicsArgsForCall)
+}
+
+func (fake *KafkaConnector) TopicsCalls(stub func() ([]topic.Topic, error)) {
+	fake.topicsMutex.Lock()
+	defer fake.topicsMutex.Unlock()
+	fake.TopicsStub = stub
+}
+
+func (fake *KafkaConnector) TopicsReturns(result1 []topic.Topic, result2 error) {
+	fake.topicsMutex.Lock()
+	defer fake.topicsMutex.Unlock()
+	fake.TopicsStub = nil
+	fake.topicsReturns = struct {
+		result1 []topic.Topic
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *KafkaConnector) TopicsReturnsOnCall(i int, result1 []topic.Topic, result2 error) {
+	fake.topicsMutex.Lock()
+	defer fake.topicsMutex.Unlock()
+	fake.TopicsStub = nil
+	if fake.topicsReturnsOnCall == nil {
+		fake.topicsReturnsOnCall = make(map[int]struct {
+			result1 []topic.Topic
+			result2 error
+		})
+	}
+	fake.topicsReturnsOnCall[i] = struct {
+		result1 []topic.Topic
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *KafkaConnector) UpdateTopic(arg1 topic.Topic, arg2 topic.Topic) error {
 	fake.updateTopicMutex.Lock()
 	ret, specificReturn := fake.updateTopicReturnsOnCall[len(fake.updateTopicArgsForCall)]
@@ -235,6 +302,8 @@ func (fake *KafkaConnector) Invocations() map[string][][]interface{} {
 	defer fake.createTopicMutex.RUnlock()
 	fake.deleteTopicMutex.RLock()
 	defer fake.deleteTopicMutex.RUnlock()
+	fake.topicsMutex.RLock()
+	defer fake.topicsMutex.RUnlock()
 	fake.updateTopicMutex.RLock()
 	defer fake.updateTopicMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

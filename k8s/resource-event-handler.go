@@ -1,3 +1,7 @@
+// Copyright (c) 2019 Benjamin Borbe All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package k8s
 
 import (
@@ -8,6 +12,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+//go:generate counterfeiter -o ../mocks/k8s-eventhandler.go --fake-name K8sEventHandler . EventHandler
 type EventHandler interface {
 	CreateTopic(topic topic.Topic) error
 	DeleteTopic(topic topic.Topic) error
@@ -66,12 +71,17 @@ func (r *resourceEventHandler) OnDelete(obj interface{}) {
 func objToTopic(obj interface{}) (*topic.Topic, error) {
 	switch t := obj.(type) {
 	case *v1.Topic:
-		return &topic.Topic{
-			Name:              t.Spec.Name,
-			NumPartitions:     t.Spec.NumPartitions,
-			ReplicationFactor: t.Spec.ReplicationFactor,
-		}, nil
+		result := manifestToTopic(*t)
+		return &result, nil
 	default:
 		return nil, errors.Errorf("not supporeted type %T", obj)
+	}
+}
+
+func manifestToTopic(t v1.Topic) topic.Topic {
+	return topic.Topic{
+		Name:              t.Spec.Name,
+		NumPartitions:     t.Spec.NumPartitions,
+		ReplicationFactor: t.Spec.ReplicationFactor,
 	}
 }

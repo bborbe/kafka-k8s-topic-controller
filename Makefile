@@ -49,5 +49,5 @@ errcheck:
 
 addlicense:
 	@go get github.com/google/addlicense
-	@addlicense -c "Benjamin Borbe" -y 2019 -l bsd ./*.go
+	@addlicense -c "Benjamin Borbe" -y 2019 -l bsd ./*.go ./topic/*.go ./purge/*.go ./k8s/*.go ./kafka/*.go
 

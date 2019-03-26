@@ -7,6 +7,7 @@ require (
 	github.com/bborbe/argument v0.0.0-20190308143650-ae14ae657ae5
 	github.com/bborbe/assert v0.0.0-20181116222016-22a6c6341415 // indirect
 	github.com/bborbe/flagenv v0.0.0-20181019084341-2956c4545608
+	github.com/bborbe/run v0.0.0-20190302200729-1b9e887f6bbe
 	github.com/evanphx/json-patch v4.1.0+incompatible // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
