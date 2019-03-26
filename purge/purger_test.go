@@ -97,4 +97,15 @@ var _ = Describe("Purge", func() {
 		Expect(err).To(BeNil())
 		Expect(kafkaConnector.DeleteTopicCallCount()).To(Equal(0))
 	})
+	It("delete no topic start with unterscore", func() {
+		k8sConnector.TopicsReturns([]topic.Topic{}, nil)
+		kafkaConnector.TopicsReturns([]topic.Topic{
+			{
+				Name: "_system_topic",
+			},
+		}, nil)
+		err := purger.Purge()
+		Expect(err).To(BeNil())
+		Expect(kafkaConnector.DeleteTopicCallCount()).To(Equal(0))
+	})
 })

@@ -5,8 +5,11 @@
 package purge
 
 import (
+	"strings"
+
 	"github.com/bborbe/kafka-k8s-topic-controller/k8s"
 	"github.com/bborbe/kafka-k8s-topic-controller/kafka"
+	"github.com/golang/glog"
 	"github.com/pkg/errors"
 )
 
@@ -40,6 +43,10 @@ func (p *purger) Purge() error {
 		return errors.Wrap(err, "list topics from kafka failed")
 	}
 	for _, kafkaTopic := range kafkaTopics {
+		if strings.HasPrefix(kafkaTopic.Name, "_") {
+			glog.V(3).Infof("ignore topic %s", kafkaTopic.Name)
+			continue
+		}
 		missing := true
 		for _, k8sTopic := range k8sTopics {
 			if k8sTopic.Name == kafkaTopic.Name {
